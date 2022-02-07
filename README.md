@@ -1,2 +1,6 @@
 # cupid_matching_st
-Streamlit app that simulates and estimates a Choo and Show matching model
+
+This is an interactive Streamlit application that solves for the stable matching and estimates the parameters of the joint surplus in a [Choo and Siow 2006](https://www.jstor.org/stable/10.1086/498585?seq=1) model   (homoskedastic, with singles), using two methods:
+
+* minimum-distance estimation
+* Poisson GLM.
