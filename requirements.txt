@@ -1,2 +1,6 @@
 cupid_matching
 streamlit
+streamlit-aggrid
+black
+autopep8
+watchdog
