@@ -113,14 +113,13 @@ def _gender_bars(xvals: np.ndarray, str_gender: str):
         str_gender: "men: or "women""
     """
     ncat = xvals.size
-    match str_gender:
-        case "men":
-            str_cat = "x"
-        case "women":
-            str_cat = "y"
-        case _:
-            print(f"str_cat cannot be {str_cat}")
-            sys.exit(1)
+    if str_gender == "men":
+        str_cat = "x"
+    elif str_gender == "women":
+        str_cat = "y"
+    else:
+        print(f"str_cat cannot be {str_cat}")
+        sys.exit(1)
 
     str_cat = "x" if str_gender == "men" else "y"
     str_val = f"Single {str_gender}"
