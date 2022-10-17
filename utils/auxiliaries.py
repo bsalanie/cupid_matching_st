@@ -1,3 +1,4 @@
+from ast import MatchSingleton
 import sys
 from math import pow
 from typing import Optional, List, Tuple
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
+from cupid_matching.matching_utils import Matching
 
 
 def _get_aggrid_data(df: pd.DataFrame, gb: GridOptionsBuilder) -> pd.DataFrame:
@@ -149,3 +151,55 @@ def _plot_matching(mus: Tuple[np.ndarray, np.ndarray, np.ndarray]):
     plotxy = _plot_heatmap(muxy, str_tit="Marriages")
     plotsingles = _plot_bars(mux0, mu0y)
     return plotxy & plotsingles
+
+
+def _print_surplus(Phi: np.ndarray):
+    """Print joint surplus
+
+    Args:
+        Phi: a matrix
+    """
+    n_types_men, n_types_women = Phi.shape
+
+    husband_types = [f"Husband {x}" for x in range(1, n_types_men + 1)]
+    wife_types = [f"Wife {y}" for y in range(1, n_types_women + 1)]
+
+    surplus = pd.DataFrame(Phi, columns=wife_types)
+    surplus.set_index(pd.Index(husband_types))
+
+    st.subheader("Joint surplus:")
+    st.write(surplus)
+
+
+def _print_matching(matching: MatchSingleton, n_digits: int = 2):
+    """Print matching patterns
+
+    Args:
+        matching: a matching
+        n_digits: number of decimals to print
+    """
+    muxy, mux0, mu0y, *_ = matching.unpack()
+    n_types_men, n_types_women = muxy.shape
+
+    husband_types = [f"Husband {x}" for x in range(1, n_types_men + 1)]
+    wife_types = [f"Wife {y}" for y in range(1, n_types_women + 1)]
+
+    marriages = pd.DataFrame(muxy, columns=wife_types)
+    marriages.index = husband_types
+    marriages.round(n_digits)
+
+    st.subheader("Marriage patterns:")
+    st.write(marriages)
+
+    st.subheader("Singles:")
+    col_men, col_women = st.columns(2)
+    with col_men:
+        single_men = pd.Series(mux0, index=range(1, n_types_men + 1), name="Men types")
+        single_men.round(n_digits)
+        st.write(single_men)
+    with col_women:
+        single_women = pd.Series(
+            mu0y, index=range(1, n_types_women + 1), name="Women types"
+        )
+        single_women.round(n_digits)
+        st.write(single_women)

@@ -12,7 +12,7 @@ import pandas as pd
 
 from cupid_matching.model_classes import ChooSiowPrimitives
 
-from utils.auxiliaries import _get_aggrid_data, _plot_heatmap, _plot_matching
+from utils.auxiliaries import _get_aggrid_data, _print_matching
 
 
 st.set_page_config(page_title="Solving for the stable matching")
@@ -74,6 +74,8 @@ with col_men:
 with col_women:
     result_nwomen = _get_aggrid_data(df_nwomen, gb_nwomen)
 
+husband_types = [f"Husband {x}" for x in range(1, n_types_men + 1)]
+wife_types = [f"Wife {y}" for y in range(1, n_types_women + 1)]
 
 st.markdown(
     """
@@ -83,9 +85,8 @@ Finally, choose the joint surplus of couples.
 
 df_phi = pd.DataFrame(
     np.zeros((n_types_men, n_types_women + 1)),
-    columns=["Partner types"] + [f"Wife {y}" for y in range(1, n_types_women + 1)],
+    columns=["Partner types"] + wife_types,
 )
-husband_types = [f"Husband {x}" for x in range(1, n_types_men + 1)]
 df_phi["Partner types"] = husband_types
 
 gb_phi = GridOptionsBuilder.from_dataframe(df_phi)
@@ -106,12 +107,13 @@ for x in range(n_types_men):
     for y in range(n_types_women):
         Phi[x, y] = result_phi[f"Wife {y + 1}"][x]
 
-st.markdown("Here is your joint surplus by categories:")
-st.altair_chart(_plot_heatmap(Phi))
+# st.markdown("Here is your joint surplus by categories:")
+# st.altair_chart(_plot_heatmap(Phi))
 
-choo_siow_instance = ChooSiowPrimitives(Phi, n_men, n_women)
-matching_popu = choo_siow_instance.ipfp_solve()
-
-st.subheader("Here are the stable matching patterns:")
-
-st.altair_chart(_plot_matching(matching_popu))
+if st.button("Get the stable matching"):
+    st.write(
+        "With unobserved heterogeneity, the stable matching patterns are not integers."
+    )
+    choo_siow_instance = ChooSiowPrimitives(Phi, n_men, n_women)
+    matching = choo_siow_instance.ipfp_solve()
+    _print_matching(matching)

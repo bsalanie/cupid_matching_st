@@ -5,7 +5,6 @@
 """
 from math import pow
 
-import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -19,8 +18,8 @@ from cupid_matching.poisson_glm import choo_siow_poisson_glm
 from utils.auxiliaries import (
     _make_margins,
     _table_estimates,
-    _plot_heatmap,
-    _plot_matching,
+    _print_surplus,
+    _print_matching,
 )
 
 
@@ -63,14 +62,14 @@ a minimum distance estimator and a Poisson GLM estimator.
 """
 )
 
-list_nhh = [1000, 10000, 100000]
+list_n_households = [1000, 10000, 100000]
 st.sidebar.subheader("First, choose the total number of households")
-n_households = st.sidebar.radio("Number of households", list_nhh)
+n_households = st.sidebar.radio("Number of households", list_n_households)
 
-list_ncat = [5, 10]
+list_n_types = [5, 10]
 st.sidebar.subheader("Now, the numbers of types of each gender")
-ncat_men = st.sidebar.radio("Number of categories of men", list_ncat)
-ncat_women = st.sidebar.radio("Number of categories of women", list_ncat)
+n_types_men = st.sidebar.radio("Number of categories of men", list_n_types)
+n_types_women = st.sidebar.radio("Number of categories of women", list_n_types)
 
 # nx = np.zeros(ncat_men)
 # my = np.zeros(ncat_women)
@@ -104,8 +103,8 @@ list_scenarii = ["Constant", "Increasing", "Decreasing"]
 scenario_men = st.sidebar.radio("Profile across categories for men", list_scenarii)
 scenario_women = st.sidebar.radio("Profile across categories for women", list_scenarii)
 
-nx = _make_margins(proportion_men, ncat_men, scenario_men)
-my = _make_margins(1.0 - proportion_men, ncat_women, scenario_women)
+nx = _make_margins(proportion_men, n_types_men, scenario_men)
+my = _make_margins(1.0 - proportion_men, n_types_women, scenario_women)
 
 
 st.sidebar.write("Finally, choose the coefficients of the 6 basis functions")
@@ -117,8 +116,8 @@ st.sidebar.latex(
 \end{align*}
 """
 )
-min_c = np.array([-3.0] + [-2.0 / ncat_men] * 5)
-max_c = np.array([3.0] + [2.0 / ncat_women] * 5)
+min_c = np.array([-3.0] + [-2.0 / n_types_men] * 5)
+max_c = np.array([3.0] + [2.0 / n_types_women] * 5)
 true_coeffs = np.zeros(6)
 coeff_names = [f"c[{i}]" for i in range(6)]
 
@@ -134,13 +133,13 @@ for i in range(6):
         coeff_names[i], min_value=min_c[i], max_value=max_c[i], value=val_i
     )
 
-xvals = np.arange(ncat_men) + 1
-yvals = np.arange(ncat_women) + 1
+xvals = np.arange(n_types_men) + 1
+yvals = np.arange(n_types_women) + 1
 
-bases = np.zeros((ncat_men, ncat_women, 6))
+bases = np.zeros((n_types_men, n_types_women, 6))
 bases[:, :, 0] = 1.0
-xvals_mat = nprepeat_col(xvals, ncat_women)
-yvals_mat = nprepeat_row(yvals, ncat_men)
+xvals_mat = nprepeat_col(xvals, n_types_women)
+yvals_mat = nprepeat_row(yvals, n_types_men)
 bases[:, :, 1] = xvals_mat
 bases[:, :, 2] = yvals_mat
 bases[:, :, 3] = xvals_mat * xvals_mat
@@ -148,8 +147,8 @@ bases[:, :, 4] = np.outer(xvals, yvals)
 bases[:, :, 5] = yvals_mat * yvals_mat
 
 Phi = bases @ true_coeffs
-st.markdown("Here is your joint surplus by categories:")
-st.altair_chart(_plot_heatmap(Phi))
+st.markdown("Here is your joint surplus by types:")
+_print_surplus(Phi)
 
 cs_market = ChooSiowPrimitives(Phi, nx, my)
 
@@ -159,8 +158,7 @@ st.subheader(
 
 mus_sim = cs_market.simulate(n_households)
 muxy_sim, mux0_sim, mu0y_sim, n_sim, m_sim = mus_sim.unpack()
-
-st.altair_chart(_plot_matching(mus_sim))
+_print_matching(mus_sim)
 
 
 st.subheader("Estimating the parameters.")
@@ -169,9 +167,8 @@ if st.button("Estimate"):
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(
-            "Below: the minimum distance estimator in Galichon and Salanié (2021b)."
+            "###### Below: the minimum distance estimator in Galichon and Salanié (2021b)."
         )
-        st.write("It also gives us a specification test.")
         mde_results = estimate_semilinear_mde(mus_sim, bases, entropy_choo_siow)
         mde_estimates = mde_results.estimated_coefficients
         mde_stderrs = mde_results.stderrs_coefficients
@@ -180,29 +177,29 @@ if st.button("Estimate"):
 
         specif_test_stat = round(mde_results.test_statistic, 2)
         specif_test_pval = round(mde_results.test_pvalue, 2)
+        st.markdown("###### It also gives us a specification test.")
         st.write(
             f"Test statistic: chi2({mde_results.ndf}) = {specif_test_stat} has p-value {specif_test_pval}"
         )
 
     with col2:
         st.markdown(
-            "Here is the Poisson GLM estimator in Galichon and Salanié (2021b)."
+            "###### Below: the Poisson GLM estimator in Galichon and Salanié (2021b)."
         )
-        st.write(
-            "It also gives us the estimates of the expected utilities $u_x$ and $v_y$."
-        )
-
         pglm_results = choo_siow_poisson_glm(mus_sim, bases)
 
-        u = pglm_results.estimated_u
-        v = pglm_results.estimated_v
         pglm_estimates = pglm_results.estimated_beta
         pglm_stderrs = pglm_results.stderrs_beta
 
         _table_estimates(coeff_names, true_coeffs, pglm_estimates, pglm_stderrs)
 
-        x_names = [str(x) for x in range(ncat_men)]
-        y_names = [str(y) for y in range(ncat_women)]
+        st.markdown(
+            "###### The Poisson estimator also gives us the estimates of the expected utilities $u_x$ and $v_y$."
+        )
+        u = pglm_results.estimated_u
+        v = pglm_results.estimated_v
+        x_names = [f"Men {x}" for x in range(1, n_types_men + 1)]
+        y_names = [f"Women {y}" for y in range(1, n_types_women + 1)]
 
         st.write("The expected utilities are:")
         df_u_estimates = pd.DataFrame(
