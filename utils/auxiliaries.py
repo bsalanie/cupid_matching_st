@@ -1,4 +1,3 @@
-from ast import MatchSingleton
 import sys
 from math import pow
 from typing import Optional, List, Tuple
@@ -171,7 +170,7 @@ def _print_surplus(Phi: np.ndarray):
     st.write(surplus)
 
 
-def _print_matching(matching: MatchSingleton, n_digits: int = 2):
+def _print_matching(matching: Matching, n_digits: int = 2):
     """Print matching patterns
 
     Args:
