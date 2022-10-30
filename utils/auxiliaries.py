@@ -1,6 +1,6 @@
 import sys
 from math import pow
-from typing import Optional, List, Tuple
+from typing import Sequence
 
 import altair as alt
 import numpy as np
@@ -47,11 +47,11 @@ def _make_margins(n: int, n_types: int, scenario: str = "Constant") -> np.ndarra
 
 
 def _table_estimates(
-    coeff_names: List,
+    coeff_names: Sequence[str],
     true_coeffs: np.ndarray,
     estimates: np.ndarray,
     stderrs: np.ndarray,
-):
+) -> st.table:
     """Creates a table with estimates and standard errors
 
     Args:
@@ -68,7 +68,7 @@ def _table_estimates(
     return st.table(df_coeffs_estimates)
 
 
-def _plot_heatmap(mat: np.ndarray, str_tit: Optional[str] = None):
+def _plot_heatmap(mat: np.ndarray, str_tit: str | None) -> alt.Chart:
     """Plots a heatmap of a matrix
 
     Args:
@@ -106,7 +106,7 @@ def _plot_heatmap(mat: np.ndarray, str_tit: Optional[str] = None):
     return both
 
 
-def _gender_bars(xvals: np.ndarray, str_gender: str):
+def _gender_bars(xvals: np.ndarray, str_gender: str) -> alt.Chart:
     """Plots a bar chart of values by types for a given gender
 
     Args:
@@ -134,25 +134,25 @@ def _gender_bars(xvals: np.ndarray, str_gender: str):
     return g_bars.properties(width=300, height=300)
 
 
-def _plot_bars(mux0: np.ndarray, mu0y: np.ndarray):
+def _plot_bars(mux0: np.ndarray, mu0y: np.ndarray) -> alt.Chart:
     men_bars = _gender_bars(mux0, "men")
     women_bars = _gender_bars(mu0y, "women")
     return (men_bars & women_bars).properties(title="Singles")
 
 
-def _plot_matching(mus: Tuple[np.ndarray, np.ndarray, np.ndarray]):
+def _plot_matching(mus: Matching) -> alt.Chart:
     """Plots the stable matching patterns
 
     Args:
-        mus: a tuple of three arrays (marriages, single men, single women)
+        mus: a Matching object
     """
-    muxy, mux0, mu0y, _, _ = mus.unpack()
+    muxy, mux0, mu0y, *_ = mus.unpack()
     plotxy = _plot_heatmap(muxy, str_tit="Marriages")
     plotsingles = _plot_bars(mux0, mu0y)
     return plotxy & plotsingles
 
 
-def _print_surplus(Phi: np.ndarray):
+def _print_surplus(Phi: np.ndarray) -> None:
     """Print joint surplus
 
     Args:
@@ -170,7 +170,7 @@ def _print_surplus(Phi: np.ndarray):
     st.write(surplus)
 
 
-def _print_matching(matching: Matching, n_digits: int = 2):
+def _print_matching(matching: Matching, n_digits: int = 2) -> None:
     """Print matching patterns
 
     Args:
