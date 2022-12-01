@@ -1,6 +1,6 @@
 import sys
 from math import pow
-from typing import Sequence
+from typing import Sequence, Optional
 
 import altair as alt
 import numpy as np
@@ -68,7 +68,7 @@ def _table_estimates(
     return st.table(df_coeffs_estimates)
 
 
-def _plot_heatmap(mat: np.ndarray, str_tit: str | None) -> alt.Chart:
+def _plot_heatmap(mat: np.ndarray, str_tit: Optional[str]=None) -> alt.Chart:
     """Plots a heatmap of a matrix
 
     Args:
