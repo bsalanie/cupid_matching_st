@@ -1,4 +1,5 @@
 cupid_matching
+scikit-learn
 streamlit
 streamlit-aggrid
 black
