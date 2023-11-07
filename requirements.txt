@@ -1,3 +1,7 @@
+numpy
+pandas
+altair
+bs_python_utils
 cupid_matching
 scikit-learn
 streamlit
