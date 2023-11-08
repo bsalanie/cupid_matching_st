@@ -28,6 +28,8 @@ with perfectly transferable utility.
 
 > If there are enough cells, it fits a quadratic specification of the joint surplus.
 
+> You can also download a summary of your simulation.
+    
 > The app relies on the IPFP algorithm in [Galichon and Salanié 2022](https://academic.oup.com/restud/article-abstract/89/5/2600/6478301) and on the estimation methods in Galichon and Salanié (2023),
 
 > which use the [cupid_matching](https://pypi.org/project/cupid_matching/) package.
